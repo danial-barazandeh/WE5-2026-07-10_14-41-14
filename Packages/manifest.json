@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.atteneder.gltfast": "file:C:/Users/danie/Desktop/glTFast-com.atteneder.gltfast-6.19.0/glTFast-com.atteneder.gltfast-6.19.0",
     "com.unity.feature.development": "1.0.2",
     "com.unity.ide.rider": "3.0.39",
     "com.unity.inputsystem": "1.19.0",
