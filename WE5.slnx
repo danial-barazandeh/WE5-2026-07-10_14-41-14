@@ -1,14 +1,10 @@
 ﻿<Solution>
-  <Project Path="glTFast.csproj" />
   <Project Path="Unity.XR.Interaction.Toolkit.Samples.StarterAssets.csproj" />
-  <Project Path="glTFast.Export.csproj" />
+  <Project Path="Oculus.LipSync.csproj" />
   <Project Path="Unity.XR.Hands.Samples.VisualizerSample.csproj" />
-  <Project Path="glTFast.Documentation.Examples.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
-  <Project Path="glTFast.Newtonsoft.csproj" />
   <Project Path="Unity.XR.Interaction.Toolkit.Samples.Hands.csproj" />
-  <Project Path="glTFast.Editor.csproj" />
-  <Project Path="glTFast.dots.csproj" />
+  <Project Path="Oculus.LipSync.Editor.csproj" />
   <Project Path="Unity.XR.Interaction.Toolkit.Samples.StarterAssets.Editor.csproj" />
   <Project Path="Unity.XR.Interaction.Toolkit.Samples.Hands.Editor.csproj" />
 </Solution>
