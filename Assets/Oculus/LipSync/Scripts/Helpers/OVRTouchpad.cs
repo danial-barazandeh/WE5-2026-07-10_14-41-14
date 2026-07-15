@@ -63,15 +63,15 @@ public static class OVRTouchpad
     {
         // MOUSE INPUT
 
-        if(Input.GetMouseButtonDown(0))
-        {
-            moveAmountMouse = Input.mousePosition;
-        }
-        else if(Input.GetMouseButtonUp(0))
-        {
-            moveAmountMouse -= Input.mousePosition;
-            HandleInputMouse(ref moveAmountMouse);
-        }
+    //    if(Input.GetMouseButtonDown(0))
+    //    {
+    //        moveAmountMouse = Input.mousePosition;
+    //    }
+    //    else if(Input.GetMouseButtonUp(0))
+    //    {
+    //        moveAmountMouse -= Input.mousePosition;
+    //        HandleInputMouse(ref moveAmountMouse);
+    //    }
     }
 
     // OnDisable

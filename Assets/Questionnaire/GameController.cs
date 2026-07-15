@@ -3,13 +3,20 @@ using System.Collections.Generic; // Required for List<T>
 using UnityEngine;
 using UnityEngine.Android;
 using System.IO;
+using TMPro;
+using System.Collections;
 
 public class GameController : MonoBehaviour
 {
+    [SerializeField] private GameObject agePanel;
+    [SerializeField] private GameObject tattooPanel;
+    [SerializeField] private GameObject othersTattooPanel;
+    [SerializeField] private GameObject genderPanel;
     [SerializeField] private GameObject startPanel;
     [SerializeField] private GameObject phase1Panel;
     [SerializeField] private GameObject phase2Panel;
     [SerializeField] private GameObject phase3Panel;
+    [SerializeField] private AvatarInteractionManager avatarManager;
     
     private string fileName;
 
@@ -22,7 +29,8 @@ public class GameController : MonoBehaviour
         public string playerAge;
         public string playerGender;
         public string datePlayed;
-        // 2. Change this to a List so it can hold multiple rounds
+        public string playerTattoo;
+        public string othersTattoo;
         public List<SessionStats> rounds = new List<SessionStats>();     
     }
 
@@ -57,11 +65,9 @@ public class GameController : MonoBehaviour
         fileName = "Experiment_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".json";
         
         currentSession = new GameSessionData();
-        currentSession.playerAge = "25";
-        currentSession.playerGender = "Female";
         currentSession.datePlayed = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
-        startPanel.SetActive(true);
+        agePanel.SetActive(true);
 
         if (!Permission.HasUserAuthorizedPermission(Permission.ExternalStorageWrite))
         {
@@ -71,6 +77,8 @@ public class GameController : MonoBehaviour
         {
             Permission.RequestUserPermission(Permission.ExternalStorageRead);
         }
+
+        
     }
 
     void Update()
@@ -78,24 +86,120 @@ public class GameController : MonoBehaviour
         
     }
 
-    public void goToPhase1()
+
+public void confirmAge()
     {
+        TMPro.TMP_Dropdown ageDropdownFirstDigit = System.Array.Find(agePanel.GetComponentsInChildren<TMPro.TMP_Dropdown>(true), d => d.name == "AgeFirstDigit");
+        TMPro.TMP_Dropdown ageDropdownSecondDigit = System.Array.Find(agePanel.GetComponentsInChildren<TMPro.TMP_Dropdown>(true), d => d.name == "AgeSecondDigit");
+
+        // --- SAFETY CHECKS ---
+        if (ageDropdownFirstDigit == null)
+        {
+            Debug.LogError("CRASH PREVENTED: Could not find 'AgeFirstDigit'. Check spelling and ensure it's a child of agePanel.");
+            return; // Stops the function here so it doesn't crash
+        }
+        if (ageDropdownSecondDigit == null)
+        {
+            Debug.LogError("CRASH PREVENTED: Could not find 'AgeSecondDigit'. Check spelling and ensure it's a child of agePanel.");
+            return;
+        }
+
+        // Safely get the actual TEXT of the selected option
+        string firstDigit = ageDropdownFirstDigit.options[ageDropdownFirstDigit.value].text;
+        string secondDigit = ageDropdownSecondDigit.options[ageDropdownSecondDigit.value].text;
+        
+        // Save it to your class-level variable
+        currentSession.playerAge = firstDigit + secondDigit;
+
+        // Hide all panels
+        agePanel.SetActive(false);
         startPanel.SetActive(false);
         phase2Panel.SetActive(false); 
         phase3Panel.SetActive(false); 
+        phase1Panel.SetActive(false);
+        tattooPanel.SetActive(false);
+        othersTattooPanel.SetActive(false);
 
-        phase1Panel.SetActive(true);
+        // Show the next phase
+        genderPanel.SetActive(true);
     }
+
+
+    public void confirmGender(  string gender){
+        currentSession.playerGender = gender;
+
+        agePanel.SetActive(false);
+        startPanel.SetActive(false);
+        phase2Panel.SetActive(false); 
+        phase3Panel.SetActive(false); 
+        phase1Panel.SetActive(false);
+        othersTattooPanel.SetActive(false);
+        genderPanel.SetActive(false);
+
+
+        tattooPanel.SetActive(true);
+
+    }
+
+      public void confirmTattoo(  string tattoo){
+        currentSession.playerTattoo = tattoo;
+
+        agePanel.SetActive(false);
+        startPanel.SetActive(false);
+        phase2Panel.SetActive(false); 
+        phase3Panel.SetActive(false); 
+        phase1Panel.SetActive(false);
+        genderPanel.SetActive(false);
+        tattooPanel.SetActive(false);
+
+        othersTattooPanel.SetActive(true);
+
+    }
+
+    public void confirmOthersTattoo(  string tattoo){
+        currentSession.othersTattoo = tattoo;
+
+        agePanel.SetActive(false);
+        phase2Panel.SetActive(false); 
+        phase3Panel.SetActive(false); 
+        phase1Panel.SetActive(false);
+        genderPanel.SetActive(false);
+        tattooPanel.SetActive(false);
+        othersTattooPanel.SetActive(false);
+
+
+        startPanel.SetActive(true);
+
+    }
+    
+
+    public void goToPhase1()
+    {
+        disableAllPanels();
+        avatarManager.StartExperimentWithUI();
+        StartCoroutine(activatePanelAfterDelay(2.5f, phase1Panel));
+    } 
+
+    
 
     public void goToPhase2()
     {
-        phase1Panel.SetActive(false);
-        phase2Panel.SetActive(true);
+        disableAllPanels();
+        avatarManager.NotifyYesHeard();
+        StartCoroutine(activatePanelAfterDelay(2.5f, phase2Panel));
     }
 
     public void goToPhase3()
     {
+
+        phase1Panel.SetActive(false);
+        startPanel.SetActive(false);
         phase2Panel.SetActive(false);
+        genderPanel.SetActive(false);
+        tattooPanel.SetActive(false);
+        othersTattooPanel.SetActive(false);
+        agePanel.SetActive(false);
+
         phase3Panel.SetActive(true);
     }
 
@@ -126,18 +230,31 @@ public class GameController : MonoBehaviour
 
     public void SaveSharedString(int dataToShare)
     {
-        // 4. Create a NEW stats object just for this round
+        // Fetch the data from your other script
+        AvatarData currentAvatar = null;
+        if (avatarManager != null)
+        {
+            currentAvatar = avatarManager.GetAvatarData();
+        }
+        else
+        {
+            Debug.LogWarning("AvatarManager is not linked in GameController!");
+        }
+
         SessionStats thisRoundStats = new SessionStats();
-        thisRoundStats.roundNumber = currentSession.rounds.Count + 1; // Automatically counts 1, 2, 3...
+        thisRoundStats.roundNumber = currentSession.rounds.Count + 1; 
         thisRoundStats.trustLevel = dataToShare;
-        thisRoundStats.NPCGender = "Male";
-        thisRoundStats.NPCTattooCategory = "Tattoo Category";
+        
+        // Grab the strings from the AvatarData object. 
+        // We use a fallback ("Unknown") just in case something went wrong.
+        thisRoundStats.NPCGender = (currentAvatar != null) ? currentAvatar.gender : "Unknown";
+        thisRoundStats.NPCTattooCategory = (currentAvatar != null) ? currentAvatar.tatoo : "Unknown";
     
-        // 5. Add this round's stats to the main session's list
         currentSession.rounds.Add(thisRoundStats);
 
-        // 6. Convert the ENTIRE session (with all rounds) to pretty JSON
         string jsonString = JsonUtility.ToJson(currentSession, true);
+
+        avatarManager.AdvanceToNextAvatar();
 
         try
         {
@@ -161,5 +278,31 @@ public class GameController : MonoBehaviour
             Debug.LogError("CRASH in SaveSharedString: " + e.Message);
             Debug.LogError(e.StackTrace);
         }
+    }
+
+
+
+
+
+
+
+    private IEnumerator activatePanelAfterDelay(float delayTime, GameObject panel)
+    {
+        Debug.Log("Delay yime: "+delayTime.ToString()+" Activated panel: " + panel.name);
+        yield return new WaitForSeconds(delayTime);
+        panel.SetActive(true);
+        Debug.Log("Activated panel: " + panel.name);
+    }
+
+    private void disableAllPanels()
+    {
+        phase1Panel.SetActive(false);
+        startPanel.SetActive(false);
+        phase2Panel.SetActive(false);
+        genderPanel.SetActive(false);
+        tattooPanel.SetActive(false);
+        othersTattooPanel.SetActive(false);
+        agePanel.SetActive(false);
+        phase3Panel.SetActive(false);
     }
 }
