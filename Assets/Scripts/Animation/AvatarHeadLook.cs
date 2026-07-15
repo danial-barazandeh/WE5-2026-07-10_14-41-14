@@ -16,6 +16,7 @@ public class AvatarHeadLook : MonoBehaviour
     public bool lookEnabled = true;
 
     Quaternion _headOffset;
+    Quaternion _smoothed;   // persists across frames, independent of the animation
     float _weight;
 
     void Start()
@@ -23,9 +24,10 @@ public class AvatarHeadLook : MonoBehaviour
         if (targetCamera == null) targetCamera = Camera.main;
         Quaternion restLook = Quaternion.LookRotation(bodyReference.forward, bodyReference.up);
         _headOffset = Quaternion.Inverse(restLook) * headBone.rotation; // assumes head faces forward at rest
+        _smoothed = headBone.rotation;                                  // seed the persistent state
     }
 
-    void LateUpdate()
+    void LateUpdate()   // runs AFTER the Animator has posed the skeleton
     {
         if (headBone == null || bodyReference == null || targetCamera == null) return;
 
@@ -51,6 +53,8 @@ public class AvatarHeadLook : MonoBehaviour
         Quaternion rest = Quaternion.LookRotation(bodyReference.forward, bodyReference.up) * _headOffset;
         Quaternion target = Quaternion.Slerp(rest, look, _weight);
 
-        headBone.rotation = Quaternion.Slerp(headBone.rotation, target, followSpeed * Time.deltaTime);
+        // Smooth on the persistent state, NOT on headBone (which the animation just overwrote)
+        _smoothed = Quaternion.Slerp(_smoothed, target, followSpeed * Time.deltaTime);
+        headBone.rotation = _smoothed;
     }
 }
