@@ -13,7 +13,7 @@ public class AvatarInteractionManager : MonoBehaviour
 {
     enum State { Setup, Idle, PlayingFirst, WaitingForYes, PlayingSecond, ShowingPanel }
 
-    [Header("Avatars (roots — one at a time, random order)")]
+    [Header("Avatars (roots ï¿½ one at a time, random order)")]
     [SerializeField] Transform[] avatars;            // each is the root of an avatar prefab
     [SerializeField] bool loop = true;               // reshuffle and start over when all are done
     [SerializeField] bool isListenerUsed = false;
@@ -36,7 +36,7 @@ public class AvatarInteractionManager : MonoBehaviour
     [Header("Animation")]
     [SerializeField] string boolParam = "isAskingToOpen";
 
-    [Header("Debug (keyboard — will become VR input later)")]
+    [Header("Debug (keyboard ï¿½ will become VR input later)")]
     [SerializeField] bool debugYesWithKey = true;    // Y = simulate hearing "yes"
     [SerializeField] KeyCode advanceKey = KeyCode.N; // N = advance past the questions panel
 
@@ -61,11 +61,14 @@ public class AvatarInteractionManager : MonoBehaviour
     bool isExperimentReadytoStart=false;
 
 
+
     // --- public state queries for external input (debug / VR) ---
     public bool IsIdle => _state == State.Idle;
     public bool IsWaitingForYes => _state == State.WaitingForYes;
     public bool IsShowingPanel => _state == State.ShowingPanel;
 
+
+    public Vector3 currentAvatarPos; 
 
     public AvatarData GetAvatarData()
     {
@@ -112,11 +115,14 @@ public class AvatarInteractionManager : MonoBehaviour
             {
                 Vector3 camPos = targetCamera.transform.position; camPos.y = 0f;
                 Vector3 avatarPos = _current.position; avatarPos.y = 0f;
+                currentAvatarPos = avatarPos; 
                 if (Vector3.Distance(camPos, avatarPos) <= triggerDistance)
                     StartCoroutine(RunSequence());
             }
             else
             {
+                Vector3 avatarPos = _current.position; avatarPos.y = 0f;
+                currentAvatarPos = avatarPos; 
                 if (isExperimentReadytoStart) StartCoroutine(RunSequence());
             }
                 
@@ -190,7 +196,7 @@ public class AvatarInteractionManager : MonoBehaviour
     void ShowQuestionsPanel()
     {
         _state = State.ShowingPanel;
-        Debug.Log($"[Manager] Questions panel for '{_current.name}' — press '{advanceKey}' to continue");
+        Debug.Log($"[Manager] Questions panel for '{_current.name}' ï¿½ press '{advanceKey}' to continue");
         onShowQuestionsPanel?.Invoke();
         // TODO: build/populate the actual questions panel here.
     }

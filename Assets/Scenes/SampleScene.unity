@@ -2829,6 +2829,7 @@ MonoBehaviour:
   onHideQuestionsPanel:
     m_PersistentCalls:
       m_Calls: []
+  currentAvatarPos: {x: 0, y: 0, z: 0}
 --- !u!4 &419696216
 Transform:
   m_ObjectHideFlags: 0
@@ -19711,6 +19712,10 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3435865013543954137, guid: 77e7c27b2c5525e4aa8cc9f99d654486, type: 3}
+      propertyPath: m_Move
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 3477391790888308519, guid: 77e7c27b2c5525e4aa8cc9f99d654486, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 0
@@ -24210,6 +24215,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6077171911402300961, guid: 049355a4c78e0944899b02c51cb19b55, type: 3}
+      propertyPath: AIM
+      value: 
+      objectReference: {fileID: 419696215}
     - target: {fileID: 6077171911402300961, guid: 049355a4c78e0944899b02c51cb19b55, type: 3}
       propertyPath: agePanel
       value: 
