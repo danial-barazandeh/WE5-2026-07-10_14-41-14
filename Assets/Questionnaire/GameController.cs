@@ -341,7 +341,7 @@ public void confirmAge()
         avatarManager.ResetCamera();
 
         // 2. Genau 1 Sekunde warten
-        yield return new WaitForSeconds(restartTime);
+        yield return new WaitForSeconds(1.5f);
 
         // 3. Blackscreen wieder deaktivieren
         blackScreen.gameObject.SetActive(false);
@@ -357,7 +357,11 @@ public void confirmAge()
 
     public void ResetExperiment()
     {
-        SceneManager.LoadScene(0);
+        #if UNITY_ANDROID && !UNITY_EDITOR
+            Application.Quit();
+        #else
+                SceneManager.LoadScene(0);
+        #endif
     }
 
 

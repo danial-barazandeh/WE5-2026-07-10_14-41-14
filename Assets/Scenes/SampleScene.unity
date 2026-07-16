@@ -27298,6 +27298,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1645575712}
     - target: {fileID: 2791598928506381252, guid: 2a9869263fc8ba14d8d0714cccf55d44, type: 3}
+      propertyPath: m_Name
+      value: TurnAround
+      objectReference: {fileID: 0}
+    - target: {fileID: 2791598928506381252, guid: 2a9869263fc8ba14d8d0714cccf55d44, type: 3}
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
@@ -27544,10 +27548,7 @@ PrefabInstance:
     - {fileID: 58549768320016281, guid: 2a9869263fc8ba14d8d0714cccf55d44, type: 3}
     - {fileID: 5907830337803392347, guid: 2a9869263fc8ba14d8d0714cccf55d44, type: 3}
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 172980185591941516, guid: 2a9869263fc8ba14d8d0714cccf55d44, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2a9869263fc8ba14d8d0714cccf55d44, type: 3}
 --- !u!1 &1785378078 stripped
 GameObject:
