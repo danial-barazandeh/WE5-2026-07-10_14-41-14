@@ -144,6 +144,7 @@ public class AvatarInteractionManager : MonoBehaviour
 
     IEnumerator RunSequence()
     {
+        yield return new WaitForSeconds(1.0f);
         _state = State.PlayingFirst;
         yield return PlayClip(firstClip);
 
