@@ -1,9 +1,6 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Android;
 using UnityEngine.Events;
-using UnityEngine.XR;
 
 public class AvatarData
 {
@@ -15,13 +12,13 @@ public class AvatarInteractionManager : MonoBehaviour
 {
     enum State { Setup, Idle, PlayingFirst, WaitingForYes, PlayingSecond, ShowingPanel }
 
-    [Header("Avatars (roots � one at a time, random order)")]
+    [Header("Avatars (roots - one at a time, random order)")]
     [SerializeField] Transform[] avatars;            // each is the root of an avatar prefab
     [SerializeField] bool loop = true;               // reshuffle and start over when all are done
     [SerializeField] bool isListenerUsed = false;
 
     [Header("Audio clips")]
-    [SerializeField] AudioClip firstClip;            // shared across avatars; see notes for per-avatar
+    [SerializeField] AudioClip firstClip;
     [SerializeField] AudioClip secondClip;
 
     [Header("Interaction")]
@@ -33,14 +30,16 @@ public class AvatarInteractionManager : MonoBehaviour
     [SerializeField] bool isDistanceUsed = false;
 
     [Header("Camera reset")]
-    [SerializeField] Transform cameraRig;            // XR rig / player root to reset (see notes for VR)
+    [SerializeField] Transform cameraRig;            // XR Origin / rig root (NAO a camera)
+    [SerializeField] float yawOffset = 180f;        
+    [SerializeField] bool resetOnStart = true;
 
     [Header("Animation")]
     [SerializeField] string boolParam = "isAskingToOpen";
 
-    [Header("Debug (keyboard � will become VR input later)")]
-    [SerializeField] bool debugYesWithKey = true;    // Y = simulate hearing "yes"
-    [SerializeField] KeyCode advanceKey = KeyCode.N; // N = advance past the questions panel
+    [Header("Debug (keyboard - will become VR input later)")]
+    [SerializeField] bool debugYesWithKey = true;
+    [SerializeField] KeyCode advanceKey = KeyCode.N;
 
     [Header("Events")]
     public UnityEvent onShowQuestionsPanel;
@@ -56,21 +55,19 @@ public class AvatarInteractionManager : MonoBehaviour
     AvaturnVisemeDriver _visemeDriver;
     Animator _animator;
 
-    Transform _resetTarget;
-    Vector3 _initialCamPos;
-    Quaternion _initialCamRot;
 
-    bool isExperimentReadytoStart=false;
+    Vector3 _startPos;
+    float _startYaw;
 
-
+    bool isExperimentReadytoStart = false;
 
     // --- public state queries for external input (debug / VR) ---
     public bool IsIdle => _state == State.Idle;
     public bool IsWaitingForYes => _state == State.WaitingForYes;
     public bool IsShowingPanel => _state == State.ShowingPanel;
 
-
-    public Vector3 currentAvatarPos; 
+    public Vector3 currentAvatarPos;
+    public float restartTime = 3f;
 
     public AvatarData GetAvatarData()
     {
@@ -89,23 +86,36 @@ public class AvatarInteractionManager : MonoBehaviour
         return avatar;
     }
 
-
     void Awake()
     {
         if (targetCamera == null) targetCamera = Camera.main;
 
-        _resetTarget = cameraRig != null ? cameraRig
-                     : (targetCamera != null ? targetCamera.transform : null);
-        if (_resetTarget != null)
+        if (cameraRig == null && targetCamera != null)
+            cameraRig = targetCamera.transform.parent;
+
+        if (cameraRig != null)
         {
-            _initialCamPos = _resetTarget.position;
-            _initialCamRot = _resetTarget.rotation;
+            _startPos = cameraRig.position;
+            _startYaw = cameraRig.eulerAngles.y;
+        }
+        else
+        {
+            Debug.LogError("[Manager] cameraRig nao atribuido - ResetCamera nao vai funcionar");
         }
     }
 
     void Start()
     {
         BeginNextAvatar();
+
+
+       // if (resetOnStart) StartCoroutine(ResetCameraNextFrame());
+    }
+
+    IEnumerator ResetCameraNextFrame()
+    {
+        yield return new WaitForEndOfFrame();
+        ResetCamera();
     }
 
     void Update()
@@ -113,56 +123,46 @@ public class AvatarInteractionManager : MonoBehaviour
         // Distance trigger against the CURRENT avatar (XZ plane only)
         if (_state == State.Idle && _current != null && targetCamera != null)
         {
+            Vector3 avatarPos = _current.position; avatarPos.y = 0f;
+            currentAvatarPos = avatarPos;
+
             if (isDistanceUsed)
             {
                 Vector3 camPos = targetCamera.transform.position; camPos.y = 0f;
-                Vector3 avatarPos = _current.position; avatarPos.y = 0f;
-                currentAvatarPos = avatarPos; 
                 if (Vector3.Distance(camPos, avatarPos) <= triggerDistance)
                     StartCoroutine(RunSequence());
             }
             else
             {
-                Vector3 avatarPos = _current.position; avatarPos.y = 0f;
-                currentAvatarPos = avatarPos; 
                 if (isExperimentReadytoStart) StartCoroutine(RunSequence());
             }
-                
         }
-
-       /*if (debugYesWithKey && _state == State.WaitingForYes && Input.GetKeyDown(KeyCode.Y))
-            NotifyYesHeard();
-
-        if (_state == State.ShowingPanel && Input.GetKeyDown(advanceKey))
-            AdvanceToNextAvatar();
-    */}
+    }
 
     public void StartExperimentWithUI()
     {
-        isExperimentReadytoStart=true;
+        isExperimentReadytoStart = true;
     }
 
     // ---------- sequence ----------
 
     IEnumerator RunSequence()
     {
-        yield return new WaitForSeconds(1.0f);
+
         _state = State.PlayingFirst;
+
+        yield return new WaitForSeconds(restartTime);
         yield return PlayClip(firstClip);
 
         _state = State.WaitingForYes;
         if (isListenerUsed)
         {
-            if (voiceListener != null)
-            {
-                voiceListener.StartListening();
-            }
+            if (voiceListener != null) voiceListener.StartListening();
             else Debug.LogError("[Manager] voiceListener not assigned");
         }
     }
 
-
-    public void NotifyYesHeard()  // call this method to confirm the person has the key
+    public void NotifyYesHeard()
     {
         if (_state != State.WaitingForYes) return;
         StartCoroutine(PlaySecondThenPanel());
@@ -194,22 +194,20 @@ public class AvatarInteractionManager : MonoBehaviour
         if (_visemeDriver != null) _visemeDriver.ResetVisemes();
     }
 
-    // ---------- questions panel (placeholder for later) ----------
+    // ---------- questions panel ----------
 
     void ShowQuestionsPanel()
     {
         _state = State.ShowingPanel;
-        Debug.Log($"[Manager] Questions panel for '{_current.name}' � press '{advanceKey}' to continue");
+        Debug.Log($"[Manager] Questions panel for '{_current.name}'");
         onShowQuestionsPanel?.Invoke();
-        // TODO: build/populate the actual questions panel here.
     }
 
     // ---------- advance / restart ----------
 
-    public void AdvanceToNextAvatar() 
+    public void AdvanceToNextAvatar()
     {
         onHideQuestionsPanel?.Invoke();
-        ResetCamera();
         BeginNextAvatar();
     }
 
@@ -224,7 +222,7 @@ public class AvatarInteractionManager : MonoBehaviour
                 Debug.Log("[Manager] All avatars done.");
                 ShowOnlyCurrent(-1);
                 _current = null;
-                return; 
+                return;
             }
             BuildShuffledOrder();
         }
@@ -239,7 +237,6 @@ public class AvatarInteractionManager : MonoBehaviour
         Debug.Log($"[Manager] Now active: {_current.name}");
     }
 
-    // Resolve the components from the active avatar's root
     void BindCurrent(Transform root)
     {
         _current = root;
@@ -273,22 +270,37 @@ public class AvatarInteractionManager : MonoBehaviour
                 avatars[i].gameObject.SetActive(i == idx);
     }
 
-    void ResetCamera()
+    // ---------- camera reset ----------
+
+
+    static float YawOf(Transform t)
     {
-        if (cameraRig == null || targetCamera == null || _resetTarget == null) return;
+        Vector3 f = t.forward;
+        f.y = 0f;
+
+        if (f.sqrMagnitude < 1e-4f)   
+        {
+            f = -t.up;
+            f.y = 0f;
+            if (f.sqrMagnitude < 1e-4f) return 0f;
+        }
+
+        return Quaternion.LookRotation(f.normalized, Vector3.up).eulerAngles.y;
+    }
+
+    public void ResetCamera()
+    {
+        if (cameraRig == null || targetCamera == null) return;
 
         Transform cam = targetCamera.transform;
 
-  
-        float delta = _resetTarget.eulerAngles.y - cam.eulerAngles.y;
+        float targetYaw = _startYaw + yawOffset;
+        float delta = Mathf.DeltaAngle(YawOf(cam), targetYaw);
         cameraRig.RotateAround(cam.position, Vector3.up, delta);
 
-    
-        Vector3 offset = _resetTarget.position - cam.position;
+
+        Vector3 offset = _startPos - cam.position;
         offset.y = 0f;
         cameraRig.position += offset;
     }
-
-
-
 }

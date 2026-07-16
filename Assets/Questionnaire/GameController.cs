@@ -20,10 +20,10 @@ public class GameController : MonoBehaviour
     [SerializeField] private GameObject finishPanel;
     [SerializeField] private AvatarInteractionManager avatarManager;
     [SerializeField] private GameObject blackScreen;
-    
 
-    
-    
+    float restartTime;
+
+
     private string fileName;
 
     // 1. Create a persistent variable to hold all data for the entire session
@@ -69,6 +69,7 @@ public class GameController : MonoBehaviour
 
     void Start()
     {
+        restartTime = avatarManager.restartTime;
         // 3. Initialize the session data ONCE when the app starts
         fileName = "Experiment_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".json";
         
@@ -186,7 +187,7 @@ public void confirmAge()
         disableAllPanels();
         avatarManager.StartExperimentWithUI();
         
-        StartCoroutine(activatePanelAfterDelay(5f, phase1Panel));
+        StartCoroutine(activatePanelAfterDelay(8f, phase1Panel));
         
     } 
 
@@ -334,19 +335,24 @@ public void confirmAge()
 
     private IEnumerator ShowBlackScreenRoutine()
     {
+        
         // 1. Blackscreen aktivieren
         blackScreen.gameObject.SetActive(true);
+        avatarManager.ResetCamera();
 
         // 2. Genau 1 Sekunde warten
-        yield return new WaitForSeconds(1.0f);
+        yield return new WaitForSeconds(restartTime);
 
         // 3. Blackscreen wieder deaktivieren
         blackScreen.gameObject.SetActive(false);
+        
     }
 
     public void TriggerBlackScreen()
     {
         StartCoroutine(ShowBlackScreenRoutine());
+        StopCoroutine(ShowBlackScreenRoutine());
+        
     }
 
     public void ResetExperiment()
