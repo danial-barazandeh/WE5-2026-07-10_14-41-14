@@ -186,7 +186,7 @@ public void confirmAge()
         disableAllPanels();
         avatarManager.StartExperimentWithUI();
         
-        StartCoroutine(activatePanelAfterDelay(4f, phase1Panel));
+        StartCoroutine(activatePanelAfterDelay(5f, phase1Panel));
         
     } 
 
