@@ -1,7 +1,9 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Android;
 using UnityEngine.Events;
+using UnityEngine.XR;
 
 public class AvatarData
 {
@@ -128,12 +130,12 @@ public class AvatarInteractionManager : MonoBehaviour
                 
         }
 
-        if (debugYesWithKey && _state == State.WaitingForYes && Input.GetKeyDown(KeyCode.Y))
+       /*if (debugYesWithKey && _state == State.WaitingForYes && Input.GetKeyDown(KeyCode.Y))
             NotifyYesHeard();
 
         if (_state == State.ShowingPanel && Input.GetKeyDown(advanceKey))
             AdvanceToNextAvatar();
-    }
+    */}
 
     public void StartExperimentWithUI()
     {
@@ -273,10 +275,20 @@ public class AvatarInteractionManager : MonoBehaviour
 
     void ResetCamera()
     {
-        if (_resetTarget != null)
-        {
-            _resetTarget.position = _initialCamPos;
-            _resetTarget.rotation = _initialCamRot;
-        }
+        if (cameraRig == null || targetCamera == null || _resetTarget == null) return;
+
+        Transform cam = targetCamera.transform;
+
+  
+        float delta = _resetTarget.eulerAngles.y - cam.eulerAngles.y;
+        cameraRig.RotateAround(cam.position, Vector3.up, delta);
+
+    
+        Vector3 offset = _resetTarget.position - cam.position;
+        offset.y = 0f;
+        cameraRig.position += offset;
     }
+
+
+
 }
