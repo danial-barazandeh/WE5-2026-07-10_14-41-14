@@ -17,6 +17,9 @@ public class GameController : MonoBehaviour
     [SerializeField] private GameObject phase2Panel;
     [SerializeField] private GameObject phase3Panel;
     [SerializeField] private AvatarInteractionManager avatarManager;
+    [SerializeField] private GameObject blackScreen;
+
+    
     
     private string fileName;
 
@@ -31,12 +34,14 @@ public class GameController : MonoBehaviour
         public string datePlayed;
         public string playerTattoo;
         public string othersTattoo;
+        
+        
         public List<SessionStats> rounds = new List<SessionStats>();     
     }
 
     [System.Serializable]
     public class SessionStats
-    {
+    {   public float distance;
         public int roundNumber; // Helpful to track which of the 8 experiments this is
         public int trustLevel;
         public string NPCGender;
@@ -204,11 +209,19 @@ public void confirmAge()
     }
 
  public void finishScene(int score)
-    {
+    {  
         Debug.Log("Final Score: " + score);
+        
+        //Get the Distance between Camera and Avatar
+        Camera targetCamera = Camera.main;
+        Vector3 camPos = targetCamera.transform.position; camPos.y = 0f;
+        Vector3 avatarPos = avatarManager.currentAvatarPos;
+        float distanceAvaCam =  Vector3.Distance(camPos, avatarPos);
+        
+        Debug.Log("Distance" + distanceAvaCam);
 
         // 1. Save the data FIRST. This adds the new stat record to the list.
-        SaveSharedString(score);
+        SaveSharedString(score, distanceAvaCam);
 
         // 2. Check how many rounds have been recorded
         if (currentSession.rounds.Count < 8)
@@ -216,6 +229,8 @@ public void confirmAge()
             Debug.Log("Round " + currentSession.rounds.Count + " complete. Looping back to Phase 1...");
             // Not the last round! Restart the flow.
             goToPhase1();
+
+            TriggerBlackScreen();
         }
         else
         {
@@ -225,10 +240,11 @@ public void confirmAge()
             phase1Panel.SetActive(false);
             phase2Panel.SetActive(false);
             phase3Panel.SetActive(false);
+
         }
     }
 
-    public void SaveSharedString(int dataToShare)
+    public void SaveSharedString(int dataToShare, float distanceData)
     {
         // Fetch the data from your other script
         AvatarData currentAvatar = null;
@@ -244,6 +260,7 @@ public void confirmAge()
         SessionStats thisRoundStats = new SessionStats();
         thisRoundStats.roundNumber = currentSession.rounds.Count + 1; 
         thisRoundStats.trustLevel = dataToShare;
+        thisRoundStats.distance = distanceData;
         
         // Grab the strings from the AvatarData object. 
         // We use a fallback ("Unknown") just in case something went wrong.
@@ -304,5 +321,22 @@ public void confirmAge()
         othersTattooPanel.SetActive(false);
         agePanel.SetActive(false);
         phase3Panel.SetActive(false);
+    }
+
+    private IEnumerator ShowBlackScreenRoutine()
+    {
+        // 1. Blackscreen aktivieren
+        blackScreen.gameObject.SetActive(true);
+
+        // 2. Genau 1 Sekunde warten
+        yield return new WaitForSeconds(1.0f);
+
+        // 3. Blackscreen wieder deaktivieren
+        blackScreen.gameObject.SetActive(false);
+    }
+
+    public void TriggerBlackScreen()
+    {
+        StartCoroutine(ShowBlackScreenRoutine());
     }
 }
