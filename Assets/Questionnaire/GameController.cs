@@ -5,6 +5,7 @@ using UnityEngine.Android;
 using System.IO;
 using TMPro;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class GameController : MonoBehaviour
 {
@@ -16,8 +17,10 @@ public class GameController : MonoBehaviour
     [SerializeField] private GameObject phase1Panel;
     [SerializeField] private GameObject phase2Panel;
     [SerializeField] private GameObject phase3Panel;
+    [SerializeField] private GameObject finishPanel;
     [SerializeField] private AvatarInteractionManager avatarManager;
     [SerializeField] private GameObject blackScreen;
+    
 
     
     
@@ -179,10 +182,12 @@ public void confirmAge()
     
 
     public void goToPhase1()
-    {
+    {   
         disableAllPanels();
         avatarManager.StartExperimentWithUI();
-        StartCoroutine(activatePanelAfterDelay(2.5f, phase1Panel));
+        
+        StartCoroutine(activatePanelAfterDelay(4f, phase1Panel));
+        
     } 
 
     
@@ -191,7 +196,8 @@ public void confirmAge()
     {
         disableAllPanels();
         avatarManager.NotifyYesHeard();
-        StartCoroutine(activatePanelAfterDelay(2.5f, phase2Panel));
+        StartCoroutine(activatePanelAfterDelay(4f, phase2Panel));
+      
     }
 
     public void goToPhase3()
@@ -206,6 +212,7 @@ public void confirmAge()
         agePanel.SetActive(false);
 
         phase3Panel.SetActive(true);
+        
     }
 
  public void finishScene(int score)
@@ -231,6 +238,7 @@ public void confirmAge()
             goToPhase1();
 
             TriggerBlackScreen();
+           
         }
         else
         {
@@ -240,6 +248,7 @@ public void confirmAge()
             phase1Panel.SetActive(false);
             phase2Panel.SetActive(false);
             phase3Panel.SetActive(false);
+            finishPanel.SetActive(true);
 
         }
     }
@@ -339,4 +348,11 @@ public void confirmAge()
     {
         StartCoroutine(ShowBlackScreenRoutine());
     }
+
+    public void ResetExperiment()
+    {
+        SceneManager.LoadScene(0);
+    }
+
+
 }
